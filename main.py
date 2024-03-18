@@ -10,6 +10,7 @@ DELAY_TIME = 2 # after each copy delay 2s
 
 whitelist = [] # user_id, who can use the bot
 stop_task_flag = False
+record = 0
 
 bot = telebot.TeleBot(BOT_TOKEN)
 
@@ -27,6 +28,7 @@ def start_info(message):
     text = '''Hi
     Bot功能未完善，错误处理羸弱，请谨慎使用
     /start:  欢迎命令
+    /last:  上一条copy命令的截止id
     /copy:  开始复制，请随指示操作
     /stop:  停止copy，由于未开启异步，意义不大
     '''
@@ -39,6 +41,12 @@ def stop_task(message):
     stop_task_flag = True
     logging.info(f'user {message.chat.id} use /stop ...')
     bot.reply_to(message, "Task stopped.")
+ 
+@bot.message_handler(commands=['last'])
+def get_last_info(message):
+    text = f'上一次copy的截止id是 {record}'
+    logging.info(f'user {message.chat.id} use /last ...')
+    bot.send_message(message.chat.id, text)
 
 # main function
 @bot.message_handler(commands=['copy'])
@@ -65,6 +73,9 @@ def file_handler(message):
         logging.info(text)
         time.sleep(DELAY_TIME)
 
+    global record
+    record = sign
+    # unbound warning for sign here
     if stop_task_flag:
         text = f'任务已结束\n应复制 {end_id - start_id + 1 } 条消息\n实际复制 {sign - start_id} 条消息'
     else:
