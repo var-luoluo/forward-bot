@@ -3,6 +3,16 @@ import time
 import telebot
 import logging
 
+'''
+# If you can't set proxy outside, just use this with PySocks installed
+import socket
+import socks
+
+# change the port to what you use
+socks.set_default_proxy(socks.SOCKS5, "localhost", 7890)
+socket.socket = socks.socksocket
+'''
+
 BOT_TOKEN = os.environ.get('BOT_TOKEN') # export BOT_TOKEN='your_bot_token_from_@botfather'
 FROM_CHAT = 0 # chat_id, which chat to copy
 TO_CHAT = 0 # chat_id, copy to which chat
