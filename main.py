@@ -77,6 +77,13 @@ async def file_handler(message):
     for sign in range(start_id, end_id + 1):
         if stop_task_flag:         
             break
+
+        msg = await bot.get_message(chat_id=FROM_CHAT, message_id=sign)
+        if msg is None:
+            error_text = f"消息 {sign} 不存在，已跳过"
+            logging.warning(error_text)
+            await bot.send_message(message.chat.id,error_text)
+            continue
         
         bot.copy_message(chat_id=TO_CHAT, from_chat_id=FROM_CHAT, message_id=sign)
         text = f'目前已经复制完第{sign}条'
