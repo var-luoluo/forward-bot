@@ -91,8 +91,8 @@ async def file_handler(message):
         logging.info(text)
         time.sleep(DELAY_TIME)
 
-    global record
-    record = sign
+        global record
+        record = sign
     # unbound warning for sign here
     if stop_task_flag:
         text = f'任务已结束\n应复制 {end_id - start_id + 1 } 条消息\n实际复制 {sign - start_id} 条消息'
