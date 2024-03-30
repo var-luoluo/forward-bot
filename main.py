@@ -121,25 +121,39 @@ def file_handler(message):
     logging.info(f'with the text {message.text}')
     start_id, end_id = map(int, message.text.split())
     global stop_task_flag
+    global record
     stop_task_flag = False
     bot.send_message(message.chat.id, "Copying ...", parse_mode="Markdown")
     for sign in range(start_id, end_id + 1):
         if stop_task_flag:         
             break
         
-        bot.copy_message(chat_id=to_chat, from_chat_id=from_chat, message_id=sign)
+        try:
+            bot.copy_message(chat_id=to_chat, from_chat_id=from_chat, message_id=sign)
+        except telebot.apihelper.ApiTelegramException as e:
+            if e.error_code == 400:
+                bot.reply_to(message, f"无法复制消息 {sign}，消息无法访问或已被删除")
+                bot.send_message(message.chat.id, "跳过该条消息...")
+                passed += 1
+                logging.error(f'跳过消息 {sign} ')
+                continue
+            else:
+                bot.reply_to(message, "复制出现错误，请重试或检查服务器状况")
+                break
+
+
         text = f'目前已经复制完第{sign}条'
         print(text)
         logging.info(text)
         time.sleep(DELAY_TIME)
 
-    global record
-    record = sign
+        record = sign
+
     # unbound warning for sign here
     if stop_task_flag:
-        text = f'任务已结束\n应复制 {end_id - start_id + 1 } 条消息\n实际复制 {sign - start_id} 条消息'
+        text = f'任务已结束\n应复制 {end_id - start_id + 1 } 条消息\n实际复制 {sign - start_id - passed} 条消息'
     else:
-        text = f'任务已结束\n应复制 {end_id - start_id + 1 } 条消息\n实际复制 {sign - start_id + 1} 条消息'
+        text = f'任务已结束\n应复制 {end_id - start_id + 1 } 条消息\n实际复制 {sign - start_id + 1 - passed} 条消息'
     print(text)
     logging.info(text)
 
