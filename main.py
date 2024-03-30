@@ -142,9 +142,9 @@ def file_handler(message):
                 break
 
 
-        text = f'目前已经复制完第{sign}条'
-        print(text)
-        logging.info(text)
+        # text = f'目前已经复制完第{sign}条'
+        # print(text)
+        # logging.info(text)
         time.sleep(DELAY_TIME)
 
         record = sign
@@ -154,7 +154,7 @@ def file_handler(message):
         text = f'任务已结束\n应复制 {end_id - start_id + 1 } 条消息\n实际复制 {sign - start_id - passed} 条消息'
     else:
         text = f'任务已结束\n应复制 {end_id - start_id + 1 } 条消息\n实际复制 {sign - start_id + 1 - passed} 条消息'
-    print(text)
+    # print(text)
     logging.info(text)
 
 
