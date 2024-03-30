@@ -14,9 +14,10 @@ socket.socket = socks.socksocket
 '''
 
 BOT_TOKEN = os.environ.get('BOT_TOKEN') # export BOT_TOKEN='your_bot_token_from_@botfather'
-FROM_CHAT = 0 # chat_id, which chat to copy
-TO_CHAT = 0 # chat_id, copy to which chat
-DELAY_TIME = 2 # after each copy delay 2s
+from_chat = int(os.environ.get('FROM_CHAT')) # chat_id, which chat to copy
+to_chat = int(os.environ.get('TO_CHAT')) # chat_id, copy to which chat
+user_id = int(os.environ.get('USER_ID'))
+DELAY_TIME = 3 # after each copy delay 3s
 
 whitelist = [] # user_id, who can use the bot
 stop_task_flag = False
@@ -26,6 +27,9 @@ bot = telebot.TeleBot(BOT_TOKEN)
 
 logging.basicConfig(filename='run.log', level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s')
+
+# Init, now only support one user.
+whitelist.append(user_id)
 
 # Avoid abused
 @bot.message_handler(func=lambda message: message.from_user.id not in whitelist)
@@ -77,7 +81,7 @@ def file_handler(message):
         if stop_task_flag:         
             break
         
-        bot.copy_message(chat_id=TO_CHAT, from_chat_id=FROM_CHAT, message_id=sign)
+        bot.copy_message(chat_id=to_chat, from_chat_id=from_chat, message_id=sign)
         text = f'目前已经复制完第{sign}条'
         print(text)
         logging.info(text)
