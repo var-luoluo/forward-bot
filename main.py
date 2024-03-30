@@ -42,12 +42,58 @@ def start_info(message):
     text = '''Hi
     Bot功能未完善，错误处理羸弱，请谨慎使用
     /start:  欢迎命令
+    /show:  展示目前所有配置
+    /from:  设置来源群组id
+    /to:    设置目的群组id
     /last:  上一条copy命令的截止id
     /copy:  开始复制，请随指示操作
     /stop:  停止copy，由于未开启异步，意义不大
     '''
     logging.info(f'user {message.chat.id} use /start ...')
     bot.reply_to(message, text, parse_mode="Markdown")
+
+
+@bot.message_handler(commands=['show'])
+def show_config(message):
+    logging.info(f'user {message.chat.id} use /show ...')
+    text=f'''参数：
+    当前用户：`{message.chat.id}`
+    来源群组：`{from_chat}`
+    目标群组：`{to_chat}`
+    最后一次copy记录：`{record}`
+    '''
+    bot.reply_to(
+        message, text, parse_mode="Markdown")
+
+
+@bot.message_handler(commands=['from'])
+def change_from_id(message):
+    logging.info(f'user {message.chat.id} use /from ...')
+    send_msg = bot.send_message(
+        message.chat.id, "请转发一条来源群组的消息")
+    bot.register_next_step_handler(send_msg, get_from)
+
+def get_from(message):
+    global from_chat
+    from_chat = message.forward_from_chat.id
+    logging.info(f'user {message.chat.id} set from_chat to {from_chat} ...')
+    bot.reply_to(
+        message, f"已设置 `from_chat` 的 id 为: `{from_chat}`", parse_mode="Markdown")
+
+@bot.message_handler(commands=['to'])
+def change_from_id(message):
+    logging.info(f'user {message.chat.id} use /to ...')
+    send_msg = bot.send_message(
+        message.chat.id, "请转发一条目的群组的消息")
+    bot.register_next_step_handler(send_msg, get_to)
+
+def get_to(message):
+    global to_chat
+    to_chat = message.forward_from_chat.id
+    logging.info(f'user {message.chat.id} set to_chat to {to_chat} ...')
+    bot.reply_to(
+        message, f"已设置 `to_chat` 的 id 为: `{to_chat}`", parse_mode="Markdown")
+    
 
 @bot.message_handler(commands=['stop'])
 def stop_task(message):
