@@ -1,25 +1,16 @@
 import os
 import time
-import telebot
+import telebot,requests,urllib3,ssl
 import logging
-
-'''
-# If you can't set proxy outside, just use this with PySocks installed
-import socket
-import socks
-
-# change the port to what you use
-socks.set_default_proxy(socks.SOCKS5, "localhost", 7890)
-socket.socket = socks.socksocket
-'''
 
 BOT_TOKEN = os.environ.get('BOT_TOKEN') # export BOT_TOKEN='your_bot_token_from_@botfather'
 from_chat = int(os.environ.get('FROM_CHAT')) # chat_id, which chat to copy
 to_chat = int(os.environ.get('TO_CHAT')) # chat_id, copy to which chat
 user_id = int(os.environ.get('USER_ID'))
-DELAY_TIME = 3 # after each copy delay 3s
-
+DELAY_TIME = 3 # after each copy delay 2s
 whitelist = [] # user_id, who can use the bot
+error_list = (requests.exceptions.SSLError, urllib3.exceptions.SSLError,ssl.SSLEOFError,
+              requests.exceptions.ReadTimeout,urllib3.exceptions.ReadTimeoutError)
 stop_task_flag = False
 record = 0
 
@@ -27,6 +18,7 @@ bot = telebot.TeleBot(BOT_TOKEN)
 
 logging.basicConfig(filename='run.log', level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s')
+
 
 # Init, now only support one user.
 whitelist.append(user_id)
@@ -40,7 +32,6 @@ def not_in_whitelist(message):
 @bot.message_handler(commands=['start'])
 def start_info(message):
     text = '''Hi
-    Bot功能未完善，错误处理羸弱，请谨慎使用
     /start:  欢迎命令
     /show:  展示目前所有配置
     /from:  设置来源群组id
@@ -93,7 +84,6 @@ def get_to(message):
     logging.info(f'user {message.chat.id} set to_chat to {to_chat} ...')
     bot.reply_to(
         message, f"已设置 `to_chat` 的 id 为: `{to_chat}`", parse_mode="Markdown")
-    
 
 @bot.message_handler(commands=['stop'])
 def stop_task(message):
@@ -122,9 +112,13 @@ def file_handler(message):
     start_id, end_id = map(int, message.text.split())
     global stop_task_flag
     global record
+    passed = 0
     stop_task_flag = False
     bot.send_message(message.chat.id, "Copying ...", parse_mode="Markdown")
-    for sign in range(start_id, end_id + 1):
+    
+    sign = start_id
+    while sign <= end_id:
+    # for sign in range(start_id, end_id + 1):
         if stop_task_flag:         
             break
         
@@ -140,21 +134,46 @@ def file_handler(message):
             else:
                 bot.reply_to(message, "复制出现错误，请重试或检查服务器状况")
                 break
+            
+        except () as ssl_error:
+            # bot.send_message(message.chat.id, "服务器ssl连接错误，这可能出于网络波动 ...")
+            print("""
+                  ====================
+                  =      ERROR       =
+                  ====================
+                  """)
+            logging.error(f'SSLError: {ssl_error}')
+            print(f'SSLError: {ssl_error}')
+            time.sleep(DELAY_TIME)
+            
+            continue
+
+        except Exception as other:
+            other_err = f"发生未知错误 {other}"
+            bot.send_message(message.chat.id, other_err)
+            print("""
+                  ====================
+                  =      ERROR       =
+                  ====================
+                  """)
+            print(other_err)
+            logging.error(other_err)
+            break
 
 
-        # text = f'目前已经复制完第{sign}条'
-        # print(text)
-        # logging.info(text)
+        text = f'目前已经复制完第{sign}条'
+        print(text)
         time.sleep(DELAY_TIME)
 
         record = sign
+        sign += 1
 
     # unbound warning for sign here
     if stop_task_flag:
-        text = f'任务已结束\n应复制 {end_id - start_id + 1 } 条消息\n实际复制 {sign - start_id - passed} 条消息'
+        text = f'任务已结束\n应复制 {end_id - start_id } 条消息\n实际复制 {sign - start_id - passed - 1} 条消息'
     else:
-        text = f'任务已结束\n应复制 {end_id - start_id + 1 } 条消息\n实际复制 {sign - start_id + 1 - passed} 条消息'
-    # print(text)
+        text = f'任务已结束\n应复制 {end_id - start_id + 1} 条消息\n实际复制 {sign - start_id - passed} 条消息'
+    print(text)
     logging.info(text)
 
 
@@ -162,4 +181,7 @@ def file_handler(message):
     bot.clear_step_handler(message)
 
 
+
+
+print("Bot start")
 bot.infinity_polling()
