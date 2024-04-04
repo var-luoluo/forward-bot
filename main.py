@@ -129,6 +129,7 @@ def file_handler(message):
                 bot.reply_to(message, f"无法复制消息 {sign}，消息无法访问或已被删除")
                 bot.send_message(message.chat.id, "跳过该条消息...")
                 passed += 1
+                sign += 1
                 logging.error(f'跳过消息 {sign} ')
                 continue
             else:
